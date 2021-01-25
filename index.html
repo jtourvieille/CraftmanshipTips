@@ -1,0 +1,372 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>Craftmanship tips</title>
+
+		<link rel="stylesheet" href="dist/reset.css">
+		<link rel="stylesheet" href="dist/reveal.css">
+		<link rel="stylesheet" href="dist/theme/black.css" id="theme">
+
+		<!-- Theme used for syntax highlighted code -->
+		<link rel="stylesheet" href="plugin/highlight/monokai.css" id="highlight-theme">
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section>
+					<h2>What's in?</h2>
+					<ul>
+						<li>Unit test abstract class</li>
+					</ul>
+				</section>
+				<section>
+					<h2 class="r-fit-text">Unit test abstract class</h2>
+				</section>
+				<section>
+					<p>Imagine you work on a document generator software. In a <font color="teal">first</font> version, your software is only able to handle <font color="blue">Word</font> document type. The code of the word document could look like this:</p>
+					<pre>
+						<code class="hljs" data-trim>
+							public class WordDocument
+							{
+							    public string Name { get; set; }
+								
+							    public string GetDocumentFullName()
+							    {
+							        return $"{Name}.docx";
+							    }
+							}
+						</code>
+					</pre>
+				</section>
+				<section>
+					<p>Then, in a <font color="teal">second</font> version, you are able to handle both <font color="blue">Word</font> and <font color="green">Excel</font> document types.</p>
+					<pre>
+						<code class="hljs" data-trim>
+							public class WordDocument
+							{
+							    public string Name { get; set; }
+								
+							    public string GetDocumentFullName()
+							    {
+							        return $"{Name}.docx";
+							    }
+							}
+							
+							public class ExcelDocument
+							{
+							    public string Name { get; set; }
+								
+							    public string GetDocumentFullName()
+							    {
+							        return $"{Name}.xlsx";
+							    }
+							}
+						</code>
+					</pre>
+				</section>
+				<section>
+					<img src="images/speak1.png" />
+					<span class="fragment"><img src="images/speak2.png" /></span>
+				</section>
+				<section>
+					<p>Finally, your boss wants a <font color="teal">third</font> version where you can also handle <font color="blue">Pdf</font> documents.</p>
+					<pre>
+						<code class="hljs" data-trim>
+							public class WordDocument
+							{
+							    public string Name { get; set; }
+								
+							    public string GetDocumentFullName()
+							    {
+							        return $"{Name}.docx";
+							    }
+							}
+							
+							public class ExcelDocument
+							{
+							    public string Name { get; set; }
+								
+							    public string GetDocumentFullName()
+							    {
+							        return $"{Name}.xlsx";
+							    }
+							}
+							
+							public class PdfDocument
+							{
+							    public string Name { get; set; }
+								
+							    public string GetDocumentFullName()
+							    {
+							        return $"{Name}.pdf";
+							    }
+							}
+						</code>
+					</pre>
+				</section>
+				<section>
+					<img src="images/speak3.png" />
+				</section>
+				<section>
+					<p>Let's add a base class</p>
+					<pre>
+						<code class="hljs" data-trim>
+							public abstract class Document
+							{
+							    public string Name { get; set; }
+								
+							    protected abstract string Extension { get; }
+								
+							    public string GetDocumentFullName()
+							    {
+							        return $"{Name}.{Extension}";
+							    }
+							}
+							
+							public class WordDocument : Document
+							{
+							    protected override string Extension => "docx";
+							}
+							
+							public class ExcelDocument : Document
+							{
+							    protected override string Extension => "xlsx";
+							}
+							
+							public class PdfDocument : Document
+							{
+							    protected override string Extension => "pdf";
+							}
+						</code>
+					</pre>
+				</section>
+				<section>
+					<img src="images/speak4.png" />
+					<span class="fragment"><img src="images/speak5.png" /></span>
+				</section>
+				<section>
+					<img src="images/speak6.png" />
+					<small>
+						<ul>
+							<li>Unit test all classes (<code>Document, WordDocument, ExcelDocument, PdfDocument</code>)</li>
+							<li>Unit test concrete classes (<code>WordDocument, ExcelDocument, PdfDocument</code>)</li>
+						</ul>
+					</small>
+				</section>
+				<section>
+					<h2>Unit test all classes</h2>
+					<pre>
+						<code class="hljs" data-trim>
+						[Fact]
+						public void Every_Document_Has_A_FullName()
+						{
+						    // Arrange
+						    var mock = new Mock&lt;Document&gt;
+						    {
+						        CallBase = true
+						    };
+						    mock.Object.Name = "Invoice";
+						    mock
+						        .Protected()
+						        .Setup&lt;string&gt;("Extension")
+						        .Returns("pdf");
+							
+						    // Act
+						    var documentFullName = mock.Object.GetDocumentFullName();
+
+						    // Assert
+						    Assert.Equal("Invoice.pdf", documentFullName);
+						}
+						</code>
+					</pre>
+				</section>
+				<section>
+					<h2>Unit test all classes</h2>
+					<img src="images/Coverage1.png" />
+					<small>
+						Now, the coverage of <code>Document</code> is 100%, but, concrete classes are not covered. Let's cover them.
+					</small>
+				</section>
+				<section>
+					<h2>Unit test all classes</h2>
+					<pre>
+						<code class="hljs" data-trim>
+						[Fact]
+						public void Excel_Document_Has_A_FullName()
+						{
+						    // Arrange
+						    var subject = new ExcelDocument
+						    {
+						        Name = "Invoice"
+						    };
+
+						    // Act
+						    var fullname = subject.GetDocumentFullName();
+
+						    // Assert
+						    Assert.Equal("Invoice.xlsx", fullname);
+						}
+						
+						[Fact]
+						public void Word_Document_Has_A_FullName()
+						{
+						    //...
+						}
+						
+						[Fact]
+						public void Pdf_Document_Has_A_FullName()
+						{
+						    //...
+						}
+						</code>
+					</pre>
+				</section>
+				<section>
+					<h2>Unit test all classes</h2>
+					<img src="images/Coverage2.png" />
+					<small>
+						Now, the coverage is 100% for the whole implementation.
+					</small>
+				</section>
+				<section>
+					<h2>Unit test concrete classes</h2>
+					<small>
+						Now, let's try to test only concrete classes.
+					</small>
+				</section>
+				<section>
+					<h2>Unit test concrete classes</h2>
+					<pre>
+						<code class="hljs" data-trim>
+						[Fact]
+						public void Excel_Document_Has_A_FullName()
+						{
+						    // Arrange
+						    var subject = new ExcelDocument
+						    {
+						        Name = "Invoice"
+						    };
+
+						    // Act
+						    var fullname = subject.GetDocumentFullName();
+
+						    // Assert
+						    Assert.Equal("Invoice.xlsx", fullname);
+						}
+						
+						[Fact]
+						public void Word_Document_Has_A_FullName()
+						{
+						    //...
+						}
+						
+						[Fact]
+						public void Pdf_Document_Has_A_FullName()
+						{
+						    //...
+						}
+						</code>
+					</pre>
+					<small>
+						<p>
+							The code is the same as previously. This time, we don't test directly the abstract class.
+						</p>
+					</small>
+				</section>
+				<section>
+					<h2>Unit test concrete classes</h2>
+					<img src="images/Coverage2.png" />
+					<small>
+						The coverage is 100% for the whole implementation.
+					</small>
+				</section>
+				<section>
+					<img src="images/speak7.png" />
+				</section>
+				<section>
+					<h2>Unit test all classes</h2>
+					<pre>
+						<code class="hljs" data-trim data-line-numbers="11-13">
+						[Fact]
+						public void Every_Document_Has_A_FullName()
+						{
+						    // Arrange
+						    var mock = new Mock&lt;Document&gt;
+						    {
+						        CallBase = true
+						    };
+						    mock.Object.Name = "Invoice";
+						    mock
+						        .Protected()
+						        .Setup&lt;string&gt;("Extension")
+						        .Returns("pdf");
+							
+						    // Act
+						    var documentFullName = mock.Object.GetDocumentFullName();
+
+						    // Assert
+						    Assert.Equal("Invoice.pdf", documentFullName);
+						}
+						</code>
+					</pre>
+					<small>
+						We are accessing the implementation details.
+					</small>
+				</section>
+				<section>
+					<h2>Unit testing abstract classes means</h2>
+					<ul>
+						<li>We knew the implemenation details before writing tests : we didn't use TDD</li>
+						<li>We are exposed to the rewriting of the tests with each refactoring of the implementation</li>
+					</ul>
+				</section>
+				<section>
+					<img src="images/ClassDiagram.png" />
+					<small>
+						You should see the tested class as a black box: only public elements should be tested.
+					</small>
+				</section>
+				<section>
+					<img src="images/ClassDiagramPublic.png" />
+				</section>
+				<section>
+					<img src="images/speak8.png" />
+					<small class="fragment">
+						Yes, but it is not a bad thing, because <code>WordDocument</code>, <code>ExcelDocument</code> and <code>PdfDocument</code> are <strong>different</strong> classes.
+						They have common code, but they should be see from test view as completely different classes.
+					</small>
+				</section>
+				<section>
+					<h2>Conclusion</h2>
+					<ul>
+						<li>Concerte implementation could share common code, but tests should be completely independent.</li>
+						<li>Preferer writing the tests first, this will not influence you in the way to write them.</li>
+						<li>Protected, Private ... Code should net be accessed from tests. Only Public access modifier shoud be used.</li>
+					</ul>
+					<small>
+						Thanks to <a href="https://enterprisecraftsmanship.com/posts/how-to-unit-test-an-abstract-class/">this article</<a>
+					</small>
+				</section>
+			</div>
+		</div>
+
+		<script src="dist/reveal.js"></script>
+		<script src="plugin/notes/notes.js"></script>
+		<script src="plugin/markdown/markdown.js"></script>
+		<script src="plugin/highlight/highlight.js"></script>
+		<script>
+			// More info about initialization & config:
+			// - https://revealjs.com/initialization/
+			// - https://revealjs.com/config/
+			Reveal.initialize({
+				hash: true,
+
+				// Learn about plugins: https://revealjs.com/plugins/
+				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
+			});
+		</script>
+	</body>
+</html>
