@@ -1,0 +1,1 @@
+https://jtourvieille.github.io/CraftmanshipTips.git/#/
