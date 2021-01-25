@@ -1,1 +1,1 @@
-https://jtourvieille.github.io/CraftmanshipTips.git/#/
+https://jtourvieille.github.io/CraftmanshipTips/#/
